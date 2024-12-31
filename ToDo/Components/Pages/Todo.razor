@@ -1,0 +1,60 @@
+﻿@page "/"
+@using ToDo.Models
+@using ToDo.Services
+@inject TaskServices TaskService
+
+<h3>Simple To-Do App</h3>
+
+<div>
+    <h4>Add New Task</h4>
+    <input type="text" @bind="newTaskTitle" placeholder="Task Title" />
+    <button @onclick="AddTask">Add Task</button>
+</div>
+
+<hr />
+
+<div>
+    <h4>Task List</h4>
+    <ul>
+        @foreach (var task in tasks)
+        {
+            <li>
+                <input type="checkbox" @bind="task.IsCompleted" @onchange="() => UpdateTask(task)" />
+                <span style="text-decoration: @(task.IsCompleted ? "line-through" : "none")">
+                    @task.Title
+                </span>
+            </li>
+        }
+    </ul>
+</div>
+
+@code {
+    private List<TodoTask> tasks = new();
+    private string newTaskTitle = string.Empty;
+
+    protected override async Task OnInitializedAsync()
+    {
+        tasks = await TaskService.GetTasksAsync();
+    }
+
+    private async Task AddTask()
+    {
+        if (!string.IsNullOrWhiteSpace(newTaskTitle))
+        {
+            var newTask = new TodoTask
+            {
+                Title = newTaskTitle,
+                IsCompleted = false
+            };
+            await TaskService.AddTaskAsync(newTask);
+            tasks = await TaskService.GetTasksAsync();
+            newTaskTitle = string.Empty;
+        }
+    }
+
+    private async Task UpdateTask(TodoTask task)
+    {
+        await TaskService.UpdateTaskAsync(task);
+        tasks = await TaskService.GetTasksAsync();
+    }
+}
